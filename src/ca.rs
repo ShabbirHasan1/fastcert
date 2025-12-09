@@ -164,6 +164,7 @@ impl CertificateAuthority {
     }
 
     pub fn create_ca(&mut self) -> Result<()> {
+        eprintln!("Generating CA certificate...");
         let params = create_ca_params()?;
 
         let cert = Certificate::from_params(params)

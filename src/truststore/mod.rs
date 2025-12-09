@@ -46,6 +46,7 @@ pub trait TrustStore {
 pub fn install_macos(cert_path: &Path) -> Result<()> {
     // Install to system store if enabled
     if is_store_enabled("system") {
+        eprintln!("Installing to system trust store...");
         let store = macos::MacOSTrustStore::new(cert_path);
         store.install()?;
     }
@@ -55,6 +56,7 @@ pub fn install_macos(cert_path: &Path) -> Result<()> {
 
     // Also install to NSS/Firefox if available and enabled
     if is_store_enabled("nss") && nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        eprintln!("Installing to Firefox/NSS trust store...");
         let nss_store = nss::NssTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = nss_store.install() {
             eprintln!("Warning: Failed to install certificate in Firefox: {}", e);
@@ -65,6 +67,7 @@ pub fn install_macos(cert_path: &Path) -> Result<()> {
 
     // Also install to Java keystore if available and enabled
     if is_store_enabled("java") && java::JavaTrustStore::is_available() && java::JavaTrustStore::has_keytool() {
+        eprintln!("Installing to Java trust store...");
         let java_store = java::JavaTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = java_store.install() {
             eprintln!("Warning: Failed to install certificate in Java keystore: {}", e);
@@ -106,6 +109,7 @@ pub fn uninstall_macos(cert_path: &Path) -> Result<()> {
 pub fn install_linux(cert_path: &Path) -> Result<()> {
     // Install to system store if enabled
     if is_store_enabled("system") {
+        eprintln!("Installing to system trust store...");
         let store = linux::LinuxTrustStore::new(cert_path);
         store.install()?;
     }
@@ -115,6 +119,7 @@ pub fn install_linux(cert_path: &Path) -> Result<()> {
 
     // Also install to NSS/Firefox if available and enabled
     if is_store_enabled("nss") && nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        eprintln!("Installing to Firefox/Chromium trust store...");
         let nss_store = nss::NssTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = nss_store.install() {
             eprintln!("Warning: Failed to install certificate in Firefox/Chromium: {}", e);
@@ -125,6 +130,7 @@ pub fn install_linux(cert_path: &Path) -> Result<()> {
 
     // Also install to Java keystore if available and enabled
     if is_store_enabled("java") && java::JavaTrustStore::is_available() && java::JavaTrustStore::has_keytool() {
+        eprintln!("Installing to Java trust store...");
         let java_store = java::JavaTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = java_store.install() {
             eprintln!("Warning: Failed to install certificate in Java keystore: {}", e);
@@ -166,6 +172,7 @@ pub fn uninstall_linux(cert_path: &Path) -> Result<()> {
 pub fn install_windows(cert_path: &Path) -> Result<()> {
     // Install to system store if enabled
     if is_store_enabled("system") {
+        eprintln!("Installing to system trust store...");
         let store = windows::WindowsTrustStore::new(cert_path);
         store.install()?;
     }
@@ -175,6 +182,7 @@ pub fn install_windows(cert_path: &Path) -> Result<()> {
 
     // Also install to NSS/Firefox if available and enabled
     if is_store_enabled("nss") && nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        eprintln!("Installing to Firefox trust store...");
         let nss_store = nss::NssTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = nss_store.install() {
             eprintln!("Warning: Failed to install certificate in Firefox: {}", e);
@@ -185,6 +193,7 @@ pub fn install_windows(cert_path: &Path) -> Result<()> {
 
     // Also install to Java keystore if available and enabled
     if is_store_enabled("java") && java::JavaTrustStore::is_available() && java::JavaTrustStore::has_keytool() {
+        eprintln!("Installing to Java trust store...");
         let java_store = java::JavaTrustStore::new(cert_path, unique_name.clone());
         if let Err(e) = java_store.install() {
             eprintln!("Warning: Failed to install certificate in Java keystore: {}", e);
