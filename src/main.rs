@@ -71,6 +71,10 @@ struct Cli {
     #[arg(long)]
     pkcs12: bool,
 
+    /// Generate a certificate based on the supplied CSR
+    #[arg(long, value_name = "CSR")]
+    csr: Option<String>,
+
     /// Domain names or IP addresses to generate certificates for
     #[arg(value_name = "DOMAINS")]
     domains: Vec<String>,
