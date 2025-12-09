@@ -164,6 +164,13 @@ pub fn add_client_auth(params: &mut CertificateParams) {
     }
 }
 
+/// Add email protection extended key usage
+pub fn add_email_protection(params: &mut CertificateParams) {
+    if !params.extended_key_usages.contains(&ExtendedKeyUsagePurpose::EmailProtection) {
+        params.extended_key_usages.push(ExtendedKeyUsagePurpose::EmailProtection);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
