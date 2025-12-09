@@ -57,6 +57,19 @@ fn generate_ca_keypair() -> Result<KeyPair> {
     Ok(keypair)
 }
 
+fn get_user_and_hostname() -> String {
+    let username = std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .unwrap_or_else(|_| "unknown".to_string());
+
+    let hostname = hostname::get()
+        .ok()
+        .and_then(|h| h.into_string().ok())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    format!("{}@{}", username, hostname)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
