@@ -72,6 +72,16 @@ impl LinuxDistro {
         let ext = self.cert_extension();
         Some(PathBuf::from(format!("{}{}.{}", dir, cert_name, ext)))
     }
+
+    /// Get the update command for this distribution
+    fn update_command(&self) -> Option<Vec<&'static str>> {
+        match self {
+            Self::RedHat => Some(vec!["update-ca-trust", "extract"]),
+            Self::Debian | Self::OpenSUSE => Some(vec!["update-ca-certificates"]),
+            Self::Arch => Some(vec!["trust", "extract-compat"]),
+            Self::Unknown => None,
+        }
+    }
 }
 
 pub struct LinuxTrustStore;
