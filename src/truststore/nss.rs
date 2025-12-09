@@ -4,6 +4,7 @@ use crate::{Error, Result};
 use super::TrustStore;
 use std::path::{Path, PathBuf};
 use std::env;
+use std::process::Command;
 
 pub struct NssTrustStore {
     cert_path: PathBuf,
@@ -140,6 +141,103 @@ impl NssTrustStore {
         }
 
         profiles
+    }
+
+    /// Find the certutil binary path
+    fn find_certutil() -> Option<PathBuf> {
+        #[cfg(target_os = "macos")]
+        {
+            // Check if certutil is in PATH
+            if let Ok(output) = Command::new("which").arg("certutil").output() {
+                if output.status.success() {
+                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    if !path.is_empty() {
+                        return Some(PathBuf::from(path));
+                    }
+                }
+            }
+
+            // Check default Homebrew path
+            let homebrew_path = PathBuf::from("/usr/local/opt/nss/bin/certutil");
+            if homebrew_path.exists() {
+                return Some(homebrew_path);
+            }
+
+            // Try brew --prefix nss
+            if let Ok(output) = Command::new("brew").args(&["--prefix", "nss"]).output() {
+                if output.status.success() {
+                    let prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    let certutil_path = PathBuf::from(prefix).join("bin/certutil");
+                    if certutil_path.exists() {
+                        return Some(certutil_path);
+                    }
+                }
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            // Check if certutil is in PATH
+            if let Ok(output) = Command::new("which").arg("certutil").output() {
+                if output.status.success() {
+                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    if !path.is_empty() {
+                        return Some(PathBuf::from(path));
+                    }
+                }
+            }
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            // On Windows, check if certutil is in PATH
+            if let Ok(output) = Command::new("where").arg("certutil").output() {
+                if output.status.success() {
+                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    if !path.is_empty() {
+                        return Some(PathBuf::from(path));
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Check if certutil is available
+    pub fn has_certutil() -> bool {
+        Self::find_certutil().is_some()
+    }
+
+    /// Execute certutil command
+    /// If the command fails with SEC_ERROR_READ_ONLY on Unix, retry with sudo
+    fn exec_certutil(args: &[&str]) -> Result<std::process::Output> {
+        let certutil_path = Self::find_certutil()
+            .ok_or_else(|| Error::TrustStore("certutil not found".to_string()))?;
+
+        let output = Command::new(&certutil_path)
+            .args(args)
+            .output()
+            .map_err(|e| Error::CommandFailed(format!("Failed to execute certutil: {}", e)))?;
+
+        // Check if we need to retry with sudo (SEC_ERROR_READ_ONLY on Unix)
+        #[cfg(unix)]
+        {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("SEC_ERROR_READ_ONLY") {
+                    // Retry with sudo
+                    let output = Command::new("sudo")
+                        .arg(&certutil_path)
+                        .args(args)
+                        .output()
+                        .map_err(|e| Error::CommandFailed(format!("Failed to execute certutil with sudo: {}", e)))?;
+                    return Ok(output);
+                }
+            }
+        }
+
+        Ok(output)
     }
 }
 
