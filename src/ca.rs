@@ -231,6 +231,24 @@ impl CertificateAuthority {
 
         Ok(())
     }
+
+    /// Get a unique name for the CA certificate (for use in trust stores)
+    pub fn unique_name(&self) -> Result<String> {
+        // Parse the certificate to get the serial number
+        let cert_pem = fs::read_to_string(&self.cert_path())?;
+
+        // Parse PEM to get DER
+        let pem_data = pem::parse(&cert_pem)
+            .map_err(|e| Error::Certificate(format!("Failed to parse PEM: {}", e)))?;
+
+        // Parse X.509 certificate
+        let cert = x509_parser::parse_x509_certificate(&pem_data.contents())
+            .map_err(|e| Error::Certificate(format!("Failed to parse certificate: {}", e)))?
+            .1;
+
+        let serial = cert.serial.to_str_radix(10);
+        Ok(format!("mkcert development CA {}", serial))
+    }
 }
 
 fn get_user_and_hostname() -> String {
