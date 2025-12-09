@@ -24,35 +24,116 @@ pub trait TrustStore {
 #[cfg(target_os = "macos")]
 pub fn install_macos(cert_path: &Path) -> Result<()> {
     let store = macos::MacOSTrustStore::new(cert_path);
-    store.install()
+    store.install()?;
+
+    // Also install to NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        let unique_name = ca.unique_name()?;
+        let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+        if let Err(e) = nss_store.install() {
+            eprintln!("Warning: Failed to install certificate in Firefox: {}", e);
+        } else {
+            println!("The local CA is now installed in Firefox trust store!");
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(target_os = "macos")]
 pub fn uninstall_macos(cert_path: &Path) -> Result<()> {
     let store = macos::MacOSTrustStore::new(cert_path);
-    store.uninstall()
+    store.uninstall()?;
+
+    // Also uninstall from NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        if let Ok(unique_name) = ca.unique_name() {
+            let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+            if let Err(e) = nss_store.uninstall() {
+                eprintln!("Warning: Failed to uninstall certificate from Firefox: {}", e);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
 pub fn install_linux(cert_path: &Path) -> Result<()> {
     let store = linux::LinuxTrustStore::new(cert_path);
-    store.install()
+    store.install()?;
+
+    // Also install to NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        let unique_name = ca.unique_name()?;
+        let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+        if let Err(e) = nss_store.install() {
+            eprintln!("Warning: Failed to install certificate in Firefox/Chromium: {}", e);
+        } else {
+            println!("The local CA is now installed in the Firefox and/or Chrome/Chromium trust store!");
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
 pub fn uninstall_linux(cert_path: &Path) -> Result<()> {
     let store = linux::LinuxTrustStore::new(cert_path);
-    store.uninstall()
+    store.uninstall()?;
+
+    // Also uninstall from NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        if let Ok(unique_name) = ca.unique_name() {
+            let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+            if let Err(e) = nss_store.uninstall() {
+                eprintln!("Warning: Failed to uninstall certificate from Firefox/Chromium: {}", e);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
 pub fn install_windows(cert_path: &Path) -> Result<()> {
     let store = windows::WindowsTrustStore::new(cert_path);
-    store.install()
+    store.install()?;
+
+    // Also install to NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        let unique_name = ca.unique_name()?;
+        let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+        if let Err(e) = nss_store.install() {
+            eprintln!("Warning: Failed to install certificate in Firefox: {}", e);
+        } else {
+            println!("The local CA is now installed in Firefox trust store!");
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
 pub fn uninstall_windows(cert_path: &Path) -> Result<()> {
     let store = windows::WindowsTrustStore::new(cert_path);
-    store.uninstall()
+    store.uninstall()?;
+
+    // Also uninstall from NSS/Firefox if available
+    if nss::NssTrustStore::is_available() && nss::NssTrustStore::has_certutil() {
+        let ca = crate::ca::get_ca()?;
+        if let Ok(unique_name) = ca.unique_name() {
+            let nss_store = nss::NssTrustStore::new(cert_path, unique_name);
+            if let Err(e) = nss_store.uninstall() {
+                eprintln!("Warning: Failed to uninstall certificate from Firefox: {}", e);
+            }
+        }
+    }
+
+    Ok(())
 }
