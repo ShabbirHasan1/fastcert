@@ -101,6 +101,16 @@ impl LinuxTrustStore {
     fn system_cert_path(&self) -> Option<PathBuf> {
         self.distro.cert_path("rscert-rootCA")
     }
+
+    /// Run a command with sudo if needed
+    fn run_with_sudo(&self, args: &[&str]) -> Result<std::process::Output> {
+        let output = Command::new("sudo")
+            .args(args)
+            .output()
+            .map_err(|e| Error::CommandFailed(format!("Failed to execute sudo command: {}", e)))?;
+
+        Ok(output)
+    }
 }
 
 impl TrustStore for LinuxTrustStore {
@@ -119,6 +129,80 @@ impl TrustStore for LinuxTrustStore {
     }
 
     fn install(&self) -> Result<()> {
+        // Check if distribution is supported
+        if self.distro == LinuxDistro::Unknown {
+            println!("Installing to the system store is not yet supported on this Linux distribution.");
+            println!("You can manually install the root certificate at {:?}", self.cert_path);
+            return Ok(());
+        }
+
+        // Check if already installed
+        if self.check()? {
+            println!("The local CA certificate is already installed in the system trust store.");
+            return Ok(());
+        }
+
+        println!("Installing CA certificate to Linux system trust store...");
+        println!("Note: This will require administrator privileges.");
+
+        // Get the target path
+        let sys_path = self.system_cert_path()
+            .ok_or_else(|| Error::TrustStore("Failed to determine system certificate path".to_string()))?;
+
+        // Read the certificate
+        let cert_content = std::fs::read(&self.cert_path)
+            .map_err(|e| Error::TrustStore(format!("Failed to read certificate: {}", e)))?;
+
+        // Copy certificate to system trust store using tee (similar to fastcert)
+        let sys_path_str = sys_path.to_string_lossy();
+        let output = Command::new("sudo")
+            .arg("tee")
+            .arg(sys_path_str.as_ref())
+            .stdin(std::process::Stdio::piped())
+            .output()
+            .map_err(|e| Error::CommandFailed(format!("Failed to execute tee command: {}", e)))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(Error::TrustStore(format!("Failed to copy certificate to system trust store: {}", stderr)));
+        }
+
+        // Write the certificate content
+        let mut child = Command::new("sudo")
+            .arg("tee")
+            .arg(sys_path_str.as_ref())
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::null())
+            .spawn()
+            .map_err(|e| Error::CommandFailed(format!("Failed to spawn tee command: {}", e)))?;
+
+        if let Some(mut stdin) = child.stdin.take() {
+            use std::io::Write;
+            stdin.write_all(&cert_content)
+                .map_err(|e| Error::TrustStore(format!("Failed to write certificate: {}", e)))?;
+        }
+
+        let status = child.wait()
+            .map_err(|e| Error::CommandFailed(format!("Failed to wait for tee command: {}", e)))?;
+
+        if !status.success() {
+            return Err(Error::TrustStore("Failed to copy certificate to system trust store".to_string()));
+        }
+
+        // Run the update command for the distribution
+        if let Some(update_cmd) = self.distro.update_command() {
+            let output = self.run_with_sudo(&update_cmd)?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                return Err(Error::TrustStore(format!(
+                    "Failed to update system trust store: {}",
+                    stderr
+                )));
+            }
+        }
+
+        println!("The local CA certificate is now installed in the system trust store.");
         Ok(())
     }
 
