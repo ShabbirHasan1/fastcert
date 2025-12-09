@@ -351,6 +351,12 @@ pub fn generate_certificate(
     generate_certificate_internal(&config, &ca_cert)
 }
 
+/// Read CSR file from disk
+pub fn read_csr_file(csr_path: &str) -> Result<Vec<u8>> {
+    fs::read(csr_path)
+        .map_err(|e| Error::Certificate(format!("Failed to read CSR file: {}", e)))
+}
+
 /// Generate certificate from CSR
 pub fn generate_from_csr(
     _csr_path: &str,
