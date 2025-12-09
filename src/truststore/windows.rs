@@ -130,6 +130,46 @@ impl WindowsRootStore {
             Ok(())
         }
     }
+
+    fn delete_cert(&self, cert_der: &[u8]) -> Result<bool> {
+        unsafe {
+            let mut prev_cert: *const CERT_CONTEXT = ptr::null();
+            let mut deleted_any = false;
+
+            loop {
+                prev_cert = CertEnumCertificatesInStore(self.handle, prev_cert);
+
+                if prev_cert.is_null() {
+                    break;
+                }
+
+                let cert_context = &*prev_cert;
+                let stored_cert = std::slice::from_raw_parts(
+                    cert_context.pbCertEncoded,
+                    cert_context.cbCertEncoded as usize,
+                );
+
+                if stored_cert == cert_der {
+                    // Duplicate the context so it doesn't stop enumeration when we delete it
+                    let dup_cert = CertDuplicateCertificateContext(Some(prev_cert))?;
+
+                    if dup_cert.is_null() {
+                        return Err(Error::TrustStore("Failed to duplicate certificate context".to_string()));
+                    }
+
+                    let result = CertDeleteCertificateFromStore(dup_cert);
+
+                    if let Err(e) = result {
+                        return Err(Error::TrustStore(format!("Failed to delete certificate: {}", e)));
+                    }
+
+                    deleted_any = true;
+                }
+            }
+
+            Ok(deleted_any)
+        }
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -172,7 +212,30 @@ impl TrustStore for WindowsTrustStore {
         Err(Error::TrustStore("Windows trust store is only available on Windows".to_string()))
     }
 
+    #[cfg(target_os = "windows")]
     fn uninstall(&self) -> Result<()> {
+        if !self.is_installed()? {
+            println!("The local CA certificate is not installed in the Windows certificate store.");
+            return Ok(());
+        }
+
+        println!("Removing CA certificate from Windows certificate store...");
+        println!("Note: This will require administrator privileges.");
+
+        let cert_der = self.load_cert_der()?;
+        let store = self.open_root_store()?;
+        let deleted = store.delete_cert(&cert_der)?;
+
+        if !deleted {
+            return Err(Error::TrustStore("Failed to find and remove certificate".to_string()));
+        }
+
+        println!("The local CA certificate has been removed from the Windows certificate store.");
         Ok(())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn uninstall(&self) -> Result<()> {
+        Err(Error::TrustStore("Windows trust store is only available on Windows".to_string()))
     }
 }
