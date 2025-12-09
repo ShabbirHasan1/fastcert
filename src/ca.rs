@@ -3,7 +3,7 @@
 use crate::{Error, Result};
 use std::path::{Path, PathBuf};
 use std::fs;
-use rcgen::Certificate;
+use rcgen::{Certificate, KeyPair, PKCS_RSA_SHA256};
 
 const ROOT_CERT_FILE: &str = "rootCA.pem";
 const ROOT_KEY_FILE: &str = "rootCA-key.pem";
@@ -49,6 +49,12 @@ impl CertificateAuthority {
     pub fn key_exists(&self) -> bool {
         self.key_path().exists()
     }
+}
+
+fn generate_ca_keypair() -> Result<KeyPair> {
+    let keypair = KeyPair::generate(&PKCS_RSA_SHA256)
+        .map_err(|e| Error::Certificate(format!("Failed to generate key: {}", e)))?;
+    Ok(keypair)
 }
 
 #[cfg(test)]
