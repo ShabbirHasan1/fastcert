@@ -57,3 +57,29 @@ impl HostType {
         Ok(HostType::DnsName(host.to_string()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_dns_name() {
+        let ht = HostType::parse("example.com").unwrap();
+        assert_eq!(ht, HostType::DnsName("example.com".to_string()));
+    }
+
+    #[test]
+    fn test_parse_ip() {
+        let ht = HostType::parse("127.0.0.1").unwrap();
+        match ht {
+            HostType::IpAddress(_) => {},
+            _ => panic!("Expected IP address"),
+        }
+    }
+
+    #[test]
+    fn test_parse_email() {
+        let ht = HostType::parse("test@example.com").unwrap();
+        assert_eq!(ht, HostType::Email("test@example.com".to_string()));
+    }
+}
