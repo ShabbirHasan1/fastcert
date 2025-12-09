@@ -99,7 +99,9 @@ pub fn build_san_list(hosts: &[String]) -> Result<Vec<SanType>> {
             HostType::Email(email) => {
                 san_list.push(SanType::Rfc822Name(email));
             }
-            HostType::Uri(_) => {}
+            HostType::Uri(uri) => {
+                san_list.push(SanType::URI(uri));
+            }
         }
     }
 
