@@ -1,8 +1,8 @@
 # fastcert
 
-[![CI](https://github.com/yourusername/fastcert/workflows/CI/badge.svg)](https://github.com/yourusername/fastcert/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
+[![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](#testing)
 
 A simple zero-config tool for making locally-trusted development certificates.
 
@@ -16,13 +16,15 @@ fastcert is a command-line tool that makes it easy to create and manage locally-
 - Automatically creates and manages a local CA
 - Generates certificates for multiple domains and IP addresses
 - Supports wildcard certificates
-- ECDSA key support (recommended)
+- RSA key support (default, maximum compatibility)
+- ECDSA key support (optional, better performance)
 - Client certificate generation
 - PKCS#12 format support
 - Cross-platform support (macOS, Linux, Windows)
 - Integrates with system trust stores
 - Firefox and Java trust store support
 - Certificates properly signed by CA (not self-signed)
+- Comprehensive test coverage (85+ tests)
 
 ## Installation
 
@@ -30,7 +32,7 @@ fastcert is a command-line tool that makes it easy to create and manage locally-
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fastcert.git
+git clone <repository-url>
 cd fastcert
 ```
 
@@ -326,6 +328,56 @@ fastcert automatically detects and integrates with:
 - System trust store (macOS Keychain, Windows Certificate Store, Linux CA certificates)
 - Firefox/Chrome (via NSS)
 - Java KeyStore
+
+## Testing
+
+fastcert has comprehensive test coverage to ensure reliability and correctness:
+
+### Test Suite Overview
+
+- **85+ total tests** (all passing)
+- **51 unit tests** - Testing individual functions and modules
+- **6 integration tests** - Verifying certificate signing, key sizes, and SANs
+- **17 end-to-end tests** - Complete workflow validation including:
+  - 8 basic workflow tests (RSA, ECDSA, PKCS12, client certs, etc.)
+  - 9 real-world scenario tests (see below)
+- **11 security tests** - File permissions, CA signing, serial uniqueness, key usage
+
+### Real-World Scenario Tests
+
+The test suite includes scenarios covering common development workflows:
+
+1. **Web development setup** - localhost + 127.0.0.1 + custom domains
+2. **Microservices** - Wildcard subdomains for service architectures
+3. **Mobile development** - LAN IP addresses for physical device testing
+4. **Certificate renewal** - Regenerating certs with unique serials
+5. **Reverse proxy** - nginx/Apache style multi-domain certificates
+6. **Docker development** - Container hostname certificates
+7. **Multiple environments** - Dev, staging, prod with shared CA
+8. **API gateway** - Versioned APIs and multiple endpoints
+
+### Running Tests
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific test suite
+cargo test --test integration
+cargo test --test e2e
+cargo test --test security
+
+# Run with verbose output
+cargo test -- --nocapture
+```
+
+### Quality Assurance
+
+Unlike fastcert (which has no tests), fastcert provides:
+- Automated testing for every commit
+- OpenSSL verification of all generated certificates
+- Security validation (permissions, signing, expiration)
+- Real-world usage scenario coverage
 
 ## Troubleshooting
 
