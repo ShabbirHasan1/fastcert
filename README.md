@@ -1,6 +1,6 @@
-# rscert
+# fastcert
 
-[![CI](https://github.com/yourusername/rscert/workflows/CI/badge.svg)](https://github.com/yourusername/rscert/actions)
+[![CI](https://github.com/yourusername/fastcert/workflows/CI/badge.svg)](https://github.com/yourusername/fastcert/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 
@@ -8,7 +8,7 @@ A Rust implementation of mkcert - a simple zero-config tool for making locally-t
 
 ## Overview
 
-rscert is a command-line tool that makes it easy to create and manage locally-trusted development certificates. It works by creating a local certificate authority (CA) and then generating certificates signed by that CA. The CA certificate is installed in your system's trust store, making all certificates it signs trusted by your browsers and development tools.
+fastcert is a command-line tool that makes it easy to create and manage locally-trusted development certificates. It works by creating a local certificate authority (CA) and then generating certificates signed by that CA. The CA certificate is installed in your system's trust store, making all certificates it signs trusted by your browsers and development tools.
 
 ## Features
 
@@ -29,8 +29,8 @@ rscert is a command-line tool that makes it easy to create and manage locally-tr
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/rscert.git
-cd rscert
+git clone https://github.com/yourusername/fastcert.git
+cd fastcert
 ```
 
 2. Build and install:
@@ -38,7 +38,7 @@ cd rscert
 cargo install --path .
 ```
 
-This will install the `rscert` binary to your cargo bin directory (usually `~/.cargo/bin`).
+This will install the `fastcert` binary to your cargo bin directory (usually `~/.cargo/bin`).
 
 ### Build from Source
 
@@ -51,7 +51,7 @@ cargo build
 # Release build (optimized)
 cargo build --release
 
-# The binary will be in target/release/rscert
+# The binary will be in target/release/fastcert
 ```
 
 ### Prerequisites
@@ -87,16 +87,16 @@ cargo build --release
 
 ```bash
 # Install local CA in system trust store
-rscert -install
+fastcert -install
 
 # Generate certificate for a domain
-rscert example.com
+fastcert example.com
 
 # Generate certificate for multiple domains and IPs
-rscert example.com localhost 127.0.0.1 ::1
+fastcert example.com localhost 127.0.0.1 ::1
 
 # Generate wildcard certificate
-rscert "*.example.com"
+fastcert "*.example.com"
 ```
 
 ## Usage Examples
@@ -105,7 +105,7 @@ rscert "*.example.com"
 
 Generate a certificate for a single domain:
 ```bash
-rscert example.com
+fastcert example.com
 ```
 
 This creates two files:
@@ -116,7 +116,7 @@ This creates two files:
 
 Generate a certificate valid for multiple domains and IP addresses:
 ```bash
-rscert example.com localhost 127.0.0.1 ::1
+fastcert example.com localhost 127.0.0.1 ::1
 ```
 
 The files will be named `example.com+3.pem` and `example.com+3-key.pem` (the +3 indicates 3 additional names beyond the first).
@@ -125,7 +125,7 @@ The files will be named `example.com+3.pem` and `example.com+3-key.pem` (the +3 
 
 Generate a wildcard certificate:
 ```bash
-rscert "*.example.com"
+fastcert "*.example.com"
 ```
 
 Creates `_wildcard.example.com.pem` and `_wildcard.example.com-key.pem`.
@@ -134,14 +134,14 @@ Creates `_wildcard.example.com.pem` and `_wildcard.example.com-key.pem`.
 
 Specify custom output file names:
 ```bash
-rscert --cert-file mycert.pem --key-file mykey.pem example.com
+fastcert --cert-file mycert.pem --key-file mykey.pem example.com
 ```
 
 ### ECDSA Keys
 
 Generate a certificate with an ECDSA key instead of RSA:
 ```bash
-rscert --ecdsa example.com
+fastcert --ecdsa example.com
 ```
 
 ECDSA keys are smaller and faster than RSA keys.
@@ -150,43 +150,43 @@ ECDSA keys are smaller and faster than RSA keys.
 
 Generate a certificate for client authentication:
 ```bash
-rscert --client client.example.com
+fastcert --client client.example.com
 ```
 
 ### PKCS12 Format
 
 Generate a PKCS12 file (.pfx) containing both certificate and key:
 ```bash
-rscert --pkcs12 example.com
+fastcert --pkcs12 example.com
 ```
 
 Or specify a custom PKCS12 file path:
 ```bash
-rscert --p12-file mycert.pfx example.com
+fastcert --p12-file mycert.pfx example.com
 ```
 
 ### Certificate Signing Requests
 
 Generate a certificate from an existing CSR:
 ```bash
-rscert --csr mycsr.pem --cert-file mycert.pem
+fastcert --csr mycsr.pem --cert-file mycert.pem
 ```
 
 ### Managing the CA
 
 View the CA certificate location:
 ```bash
-rscert -CAROOT
+fastcert -CAROOT
 ```
 
 Install the CA in system trust stores:
 ```bash
-rscert -install
+fastcert -install
 ```
 
 Uninstall the CA from system trust stores (but keep the certificate):
 ```bash
-rscert -uninstall
+fastcert -uninstall
 ```
 
 ### Environment Variables
@@ -194,13 +194,13 @@ rscert -uninstall
 Set a custom CA location:
 ```bash
 export CAROOT="$HOME/my-ca"
-rscert -install
+fastcert -install
 ```
 
 Specify which trust stores to use:
 ```bash
 export TRUST_STORES="system,firefox,java"
-rscert -install
+fastcert -install
 ```
 
 ## Platform Support
@@ -239,11 +239,11 @@ Set the directory where the CA certificate and key are stored. This allows you t
 
 ```bash
 export CAROOT="$HOME/my-custom-ca"
-rscert -install
+fastcert -install
 ```
 
 **TRUST_STORES:**
-Comma-separated list of trust stores to use. By default, rscert auto-detects available stores.
+Comma-separated list of trust stores to use. By default, fastcert auto-detects available stores.
 
 Options:
 - `system` - Operating system trust store
@@ -252,7 +252,7 @@ Options:
 
 ```bash
 export TRUST_STORES="system,nss"
-rscert -install
+fastcert -install
 ```
 
 **RSCERT_VERBOSE:**
@@ -266,7 +266,7 @@ Suppress output except errors (same as `--quiet`).
 
 ### Certificate Validity
 
-All certificates generated by rscert are valid for 825 days (approximately 2 years and 3 months), which is the maximum validity period accepted by major browsers.
+All certificates generated by fastcert are valid for 825 days (approximately 2 years and 3 months), which is the maximum validity period accepted by major browsers.
 
 ### Key Types and Sizes
 
@@ -283,11 +283,11 @@ All certificates generated by rscert are valid for 825 days (approximately 2 yea
 
 ## How It Works
 
-When you run `rscert -install`, it creates a new local certificate authority and installs it in your system trust store. When you generate certificates, they are signed by this local CA, making them trusted by your system.
+When you run `fastcert -install`, it creates a new local certificate authority and installs it in your system trust store. When you generate certificates, they are signed by this local CA, making them trusted by your system.
 
 The CA certificate and key are stored in:
-- macOS/Linux: `$HOME/.local/share/rscert`
-- Windows: `%LOCALAPPDATA%\rscert`
+- macOS/Linux: `$HOME/.local/share/fastcert`
+- Windows: `%LOCALAPPDATA%\fastcert`
 
 You can override this location by setting the `CAROOT` environment variable.
 
@@ -302,7 +302,7 @@ You can override this location by setting the `CAROOT` environment variable.
 
 ### Trust Store Integration
 
-rscert automatically detects and integrates with:
+fastcert automatically detects and integrates with:
 - System trust store (macOS Keychain, Windows Certificate Store, Linux CA certificates)
 - Firefox/Chrome (via NSS)
 - Java KeyStore
@@ -314,7 +314,7 @@ rscert automatically detects and integrates with:
 **Problem:** Browser shows "Not Secure" or certificate warning.
 
 **Solutions:**
-1. Make sure you ran `rscert -install` before generating certificates
+1. Make sure you ran `fastcert -install` before generating certificates
 2. Restart your browser after installing the CA
 3. On Linux, you may need to manually trust the CA certificate
 4. Check that the certificate was generated for the correct domain
@@ -341,7 +341,7 @@ rscert automatically detects and integrates with:
    # macOS
    brew install nss
    ```
-2. Run `rscert -install` again
+2. Run `fastcert -install` again
 3. Restart Firefox
 
 ### Java Applications Not Trusting Certificates
@@ -350,7 +350,7 @@ rscert automatically detects and integrates with:
 
 **Solutions:**
 1. Make sure Java is installed
-2. Run `rscert -install` to add CA to Java trust store
+2. Run `fastcert -install` to add CA to Java trust store
 3. Restart Java applications
 
 ### CA Already Exists
@@ -360,16 +360,16 @@ rscert automatically detects and integrates with:
 **Solution:**
 ```bash
 # Uninstall from trust stores
-rscert -uninstall
+fastcert -uninstall
 
 # Find CA location
-rscert -CAROOT
+fastcert -CAROOT
 
 # Delete the CA directory
-rm -rf $(rscert -CAROOT)
+rm -rf $(fastcert -CAROOT)
 
 # Reinstall
-rscert -install
+fastcert -install
 ```
 
 ### Wrong Domain in Certificate
@@ -380,7 +380,7 @@ rscert -install
 Delete the certificate files and regenerate:
 ```bash
 rm example.com*.pem
-rscert example.com
+fastcert example.com
 ```
 
 ### Multiple CAs
@@ -392,13 +392,13 @@ Use the CAROOT environment variable:
 ```bash
 # Project 1
 export CAROOT="$HOME/ca-project1"
-rscert -install
-rscert project1.local
+fastcert -install
+fastcert project1.local
 
 # Project 2
 export CAROOT="$HOME/ca-project2"
-rscert -install
-rscert project2.local
+fastcert -install
+fastcert project2.local
 ```
 
 ### Certificate Expired
@@ -408,26 +408,26 @@ rscert project2.local
 **Solution:**
 Certificates are valid for 825 days. Simply regenerate:
 ```bash
-rscert example.com
+fastcert example.com
 ```
 
 ### Debugging Issues
 
 Enable verbose or debug mode for detailed output:
 ```bash
-rscert --verbose example.com
-rscert --debug -install
+fastcert --verbose example.com
+fastcert --debug -install
 ```
 
 ## FAQ
 
 ### Is this secure for production use?
 
-**No.** rscert is designed for development and testing only. Never use these certificates in production environments. The CA key is stored locally without additional protection, making it unsuitable for production use.
+**No.** fastcert is designed for development and testing only. Never use these certificates in production environments. The CA key is stored locally without additional protection, making it unsuitable for production use.
 
 ### How is this different from mkcert?
 
-rscert is a Rust implementation inspired by mkcert. The main differences:
+fastcert is a Rust implementation inspired by mkcert. The main differences:
 - Written in Rust instead of Go
 - Similar command-line interface and behavior
 - Cross-platform support for macOS, Linux, and Windows
@@ -435,12 +435,12 @@ rscert is a Rust implementation inspired by mkcert. The main differences:
 
 ### Can I use this for internal services?
 
-While technically possible, it's not recommended. For internal services, consider using a proper internal PKI solution. rscert is best suited for local development.
+While technically possible, it's not recommended. For internal services, consider using a proper internal PKI solution. fastcert is best suited for local development.
 
 ### Why does my browser still show a warning?
 
 Make sure:
-1. You ran `rscert -install` before generating certificates
+1. You ran `fastcert -install` before generating certificates
 2. The certificate includes the exact domain/IP you're accessing
 3. You've restarted your browser after installation
 4. The certificate hasn't expired
@@ -452,9 +452,9 @@ Yes, but it's not recommended. You would need to copy the CA certificate to the 
 ### What happens if I lose my CA key?
 
 If you lose the CA key, you cannot generate new trusted certificates. You'll need to:
-1. Run `rscert -uninstall` on all machines that trust the old CA
+1. Run `fastcert -uninstall` on all machines that trust the old CA
 2. Delete the CAROOT directory
-3. Run `rscert -install` to create a new CA
+3. Run `fastcert -install` to create a new CA
 4. Regenerate all certificates
 
 ### How long are certificates valid?
@@ -471,12 +471,12 @@ Yes. You can mount the CA certificate into Docker containers and configure them 
 
 ### Can I automate certificate generation?
 
-Yes. rscert is designed to be scriptable. Example:
+Yes. fastcert is designed to be scriptable. Example:
 ```bash
 #!/bin/bash
-rscert -install
+fastcert -install
 for domain in app.local api.local db.local; do
-    rscert "$domain"
+    fastcert "$domain"
 done
 ```
 
@@ -484,7 +484,7 @@ done
 
 Yes. You can generate certificates for IPv6 addresses:
 ```bash
-rscert ::1 2001:db8::1
+fastcert ::1 2001:db8::1
 ```
 
 ### Can I revoke certificates?
