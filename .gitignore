@@ -5,3 +5,10 @@ Cargo.lock
 *.pfx
 .DS_Store
 docs/plans/
+
+# Test and development files
+test.html
+test_cert.js
+start_server.sh
+*.local*.pem
+myapp.dev*.pem
