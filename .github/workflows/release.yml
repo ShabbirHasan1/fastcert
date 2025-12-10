@@ -13,8 +13,10 @@ jobs:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false  # Don't cancel other jobs if one fails
       matrix:
         include:
+          # macOS builds
           - os: macos-latest
             target: x86_64-apple-darwin
             binary_name: fastcert
@@ -23,10 +25,25 @@ jobs:
             target: aarch64-apple-darwin
             binary_name: fastcert
             asset_name: fastcert-aarch64-apple-darwin
+
+          # Linux x86_64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary_name: fastcert
             asset_name: fastcert-x86_64-unknown-linux-gnu
+
+          # Linux ARM64 (using cross)
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary_name: fastcert
+            asset_name: fastcert-aarch64-unknown-linux-gnu
+            use_cross: true
+
+          # Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: fastcert.exe
+            asset_name: fastcert-x86_64-pc-windows-msvc.exe
 
     steps:
       - name: Checkout code
@@ -37,17 +54,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross-compilation tools (Linux ARM64)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - name: Build
+      - name: Build with cross
+        if: matrix.use_cross
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Build with cargo
+        if: ${{ !matrix.use_cross }}
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Strip binary (Unix)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && !matrix.use_cross
         run: strip target/${{ matrix.target }}/release/${{ matrix.binary_name }}
 
       - name: Create archive (Unix)

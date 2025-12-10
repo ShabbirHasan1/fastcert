@@ -30,19 +30,26 @@ echo "  Downloading macOS ARM..."
 curl -sL "$MACOS_ARM_URL" -o "$TEMP_DIR/macos-arm.tar.gz"
 
 # Linux x86_64
-LINUX_URL="https://github.com/ozankasikci/fastcert/releases/download/v${VERSION}/fastcert-x86_64-unknown-linux-gnu.tar.gz"
+LINUX_X64_URL="https://github.com/ozankasikci/fastcert/releases/download/v${VERSION}/fastcert-x86_64-unknown-linux-gnu.tar.gz"
 echo "  Downloading Linux x86_64..."
-curl -sL "$LINUX_URL" -o "$TEMP_DIR/linux.tar.gz"
+curl -sL "$LINUX_X64_URL" -o "$TEMP_DIR/linux-x64.tar.gz"
+
+# Linux ARM64
+LINUX_ARM_URL="https://github.com/ozankasikci/fastcert/releases/download/v${VERSION}/fastcert-aarch64-unknown-linux-gnu.tar.gz"
+echo "  Downloading Linux ARM64..."
+curl -sL "$LINUX_ARM_URL" -o "$TEMP_DIR/linux-arm.tar.gz"
 
 echo "🔐 Calculating SHA256..."
 if command -v shasum >/dev/null 2>&1; then
     MACOS_INTEL_SHA256=$(shasum -a 256 "$TEMP_DIR/macos-intel.tar.gz" | awk '{print $1}')
     MACOS_ARM_SHA256=$(shasum -a 256 "$TEMP_DIR/macos-arm.tar.gz" | awk '{print $1}')
-    LINUX_SHA256=$(shasum -a 256 "$TEMP_DIR/linux.tar.gz" | awk '{print $1}')
+    LINUX_X64_SHA256=$(shasum -a 256 "$TEMP_DIR/linux-x64.tar.gz" | awk '{print $1}')
+    LINUX_ARM_SHA256=$(shasum -a 256 "$TEMP_DIR/linux-arm.tar.gz" | awk '{print $1}')
 elif command -v sha256sum >/dev/null 2>&1; then
     MACOS_INTEL_SHA256=$(sha256sum "$TEMP_DIR/macos-intel.tar.gz" | awk '{print $1}')
     MACOS_ARM_SHA256=$(sha256sum "$TEMP_DIR/macos-arm.tar.gz" | awk '{print $1}')
-    LINUX_SHA256=$(sha256sum "$TEMP_DIR/linux.tar.gz" | awk '{print $1}')
+    LINUX_X64_SHA256=$(sha256sum "$TEMP_DIR/linux-x64.tar.gz" | awk '{print $1}')
+    LINUX_ARM_SHA256=$(sha256sum "$TEMP_DIR/linux-arm.tar.gz" | awk '{print $1}')
 else
     echo "Error: Neither shasum nor sha256sum found"
     rm -rf "$TEMP_DIR"
@@ -53,7 +60,8 @@ rm -rf "$TEMP_DIR"
 
 echo "  ✓ macOS Intel SHA256: $MACOS_INTEL_SHA256"
 echo "  ✓ macOS ARM SHA256: $MACOS_ARM_SHA256"
-echo "  ✓ Linux SHA256: $LINUX_SHA256"
+echo "  ✓ Linux x86_64 SHA256: $LINUX_X64_SHA256"
+echo "  ✓ Linux ARM64 SHA256: $LINUX_ARM_SHA256"
 
 # Create homebrew directory if it doesn't exist
 mkdir -p homebrew
@@ -80,7 +88,10 @@ class Fastcert < Formula
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/ozankasikci/fastcert/releases/download/v${VERSION}/fastcert-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "${LINUX_SHA256}"
+      sha256 "${LINUX_X64_SHA256}"
+    else
+      url "https://github.com/ozankasikci/fastcert/releases/download/v${VERSION}/fastcert-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "${LINUX_ARM_SHA256}"
     end
   end
 
