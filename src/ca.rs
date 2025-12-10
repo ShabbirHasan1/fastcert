@@ -258,6 +258,32 @@ impl CertificateAuthority {
         let serial = cert.serial.to_str_radix(10);
         Ok(format!("mkcert development CA {}", serial))
     }
+
+    /// Get the serial number of the CA certificate
+    pub fn get_serial_number(&self) -> Result<String> {
+        let cert_pem = fs::read_to_string(&self.cert_path())?;
+        let pem_data = pem::parse(&cert_pem)
+            .map_err(|e| Error::Certificate(format!("Failed to parse PEM: {}", e)))?;
+        let cert = x509_parser::parse_x509_certificate(&pem_data.contents())
+            .map_err(|e| Error::Certificate(format!("Failed to parse certificate: {}", e)))?
+            .1;
+        Ok(cert.serial.to_str_radix(16))
+    }
+}
+
+/// Check if a serial number is unique (not used by another CA certificate)
+pub fn is_serial_unique(serial: &str, ca_path: &Path) -> Result<bool> {
+    if !ca_path.exists() {
+        return Ok(true);
+    }
+
+    let ca = CertificateAuthority::new(ca_path.to_path_buf());
+    if !ca.cert_exists() {
+        return Ok(true);
+    }
+
+    let existing_serial = ca.get_serial_number()?;
+    Ok(existing_serial != serial)
 }
 
 fn get_user_and_hostname() -> String {
@@ -391,5 +417,31 @@ mod tests {
 
         let cert_exists_after = ca.cert_exists();
         assert!(cert_exists_after, "Certificate should still exist after uninstall call");
+    }
+
+    #[test]
+    fn test_ca_serial_uniqueness() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let mut ca = CertificateAuthority::new(temp_dir.path().to_path_buf());
+        ca.load_or_create().unwrap();
+
+        let serial = ca.get_serial_number().unwrap();
+        assert!(!serial.is_empty(), "Serial number should not be empty");
+
+        // Check that the serial is not unique against itself
+        assert!(!is_serial_unique(&serial, temp_dir.path()).unwrap());
+
+        // Create a different CA to verify uniqueness
+        let temp_dir2 = TempDir::new().unwrap();
+        let mut ca2 = CertificateAuthority::new(temp_dir2.path().to_path_buf());
+        ca2.load_or_create().unwrap();
+
+        let serial2 = ca2.get_serial_number().unwrap();
+        assert_ne!(serial, serial2, "Different CAs should have different serials");
+
+        // Check that serial1 is unique against ca2's path
+        assert!(is_serial_unique(&serial, temp_dir2.path()).unwrap());
     }
 }
