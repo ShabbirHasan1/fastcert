@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 
-A Rust implementation of fastcert - a simple zero-config tool for making locally-trusted development certificates.
+A simple zero-config tool for making locally-trusted development certificates.
 
 ## Overview
 
@@ -425,13 +425,6 @@ fastcert --debug -install
 
 **No.** fastcert is designed for development and testing only. Never use these certificates in production environments. The CA key is stored locally without additional protection, making it unsuitable for production use.
 
-### How is this different from fastcert?
-
-fastcert is a Rust implementation inspired by fastcert. The main differences:
-- Written in Rust instead of Go
-- Similar command-line interface and behavior
-- Cross-platform support for macOS, Linux, and Windows
-- Automatic trust store integration
 
 ### Can I use this for internal services?
 
