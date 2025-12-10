@@ -962,4 +962,44 @@ mod tests {
         assert!(!hosts.is_empty());
         assert_eq!(hosts[0], "example.com");
     }
+
+    #[test]
+    fn test_end_to_end_certificate_generation() {
+        use std::fs;
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let temp_path = temp_dir.path();
+
+        let ca_params = {
+            let mut params = CertificateParams::default();
+            params.alg = &PKCS_ECDSA_P256_SHA256;
+            params.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
+            params.distinguished_name.push(rcgen::DnType::CommonName, "Test CA");
+            params
+        };
+        let ca_cert = rcgen::Certificate::from_params(ca_params).unwrap();
+
+        let hosts = vec!["example.com".to_string(), "localhost".to_string()];
+        let mut config = CertificateConfig::new(hosts.clone());
+        config.use_ecdsa = true;
+
+        let cert_path = temp_path.join("test.pem");
+        let key_path = temp_path.join("test-key.pem");
+
+        config.cert_file = Some(cert_path.clone());
+        config.key_file = Some(key_path.clone());
+
+        let result = generate_certificate_internal(&config, &ca_cert);
+        assert!(result.is_ok(), "End-to-end certificate generation failed: {:?}", result.err());
+
+        assert!(cert_path.exists(), "Certificate file not created");
+        assert!(key_path.exists(), "Key file not created");
+
+        let cert_pem = fs::read_to_string(&cert_path).unwrap();
+        let key_pem = fs::read_to_string(&key_path).unwrap();
+
+        assert!(cert_pem.contains("BEGIN CERTIFICATE"));
+        assert!(key_pem.contains("BEGIN PRIVATE KEY"));
+    }
 }
