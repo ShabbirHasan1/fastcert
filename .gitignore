@@ -1,5 +1,4 @@
 /target
-Cargo.lock
 *.pem
 *.p12
 *.pfx
